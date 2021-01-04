@@ -1,9 +1,11 @@
 from abc import ABCMeta, abstractmethod
 from ..config.data_type import DataType
 
+
 class Warehouse(metaclass=ABCMeta):
     """Abstract Warehouse class"""
-    conf_dict:dict
+
+    conf_dict: dict
 
     def __init__(self, conf_dict):
         """Should Create connection"""
@@ -20,8 +22,13 @@ class Warehouse(metaclass=ABCMeta):
         return
 
     @abstractmethod
-    def create_table(self, schema: str, table: str):
+    def create_table(self, schema: str, table: str, col_types: dict):
         """ Create table if does not exist"""
+        return
+
+    @abstractmethod
+    def create_users_table(self, schema: str, col_types: dict):
+        """ Create users table if does not exist"""
         return
 
     @abstractmethod
