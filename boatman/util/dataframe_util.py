@@ -19,6 +19,7 @@ def get_datatypes(df):
                 column_datatypes[c] = data_type.DataType.DATETIME
             else:
                 column_datatypes[c] = data_type.DataType.STRING
+                df[c] = df[c].astype(str)
         elif df[c].dtype == np.float64 or float == type(first_good_value):
             column_datatypes[c] = data_type.DataType.FLOAT64
         elif df[c].dtype == np.int64 or int == type(first_good_value):
@@ -54,6 +55,8 @@ def row_count(df):
 def empty(df):
     return row_count(df) == 0
 
+def mark_nan_to_none(df, col_types):
+    df.where(df.notnull(), None)
 
 def mark_string_na_to_default(df, col_types):
     for column_name, column_type in col_types.items():

@@ -22,12 +22,12 @@ class Warehouse(metaclass=ABCMeta):
         return
 
     @abstractmethod
-    def create_table(self, schema: str, table: str, col_types: dict):
+    def create_table(self, schema: str, table: str, col_types: dict, non_null_columns: list[str]):
         """ Create table if does not exist"""
         return
 
     @abstractmethod
-    def create_users_table(self, schema: str, col_types: dict):
+    def create_users_table(self, schema: str, col_types: dict, non_null_columns: list[str]):
         """ Create users table if does not exist"""
         return
 
@@ -36,9 +36,13 @@ class Warehouse(metaclass=ABCMeta):
         return
 
     @abstractmethod
-    def add_column(self, schema: str, table: str, column: str, column_type: DataType):
+    def add_column(self, schema: str, table: str, column: str, column_type: DataType, non_null_columns: list[str]):
         return
 
     @abstractmethod
     def insert_df(self, schema: str, table: str, df):
+        return
+
+    @abstractmethod
+    def close(self):
         return

@@ -11,7 +11,7 @@ class App:
     name: str
 
     def schema(self):
-        return "clickstream_" + humps.decamelize(self.name)
+        return humps.decamelize(self.name)
 
 
 yaml.add_path_resolver("!app", ["App"], dict)
@@ -24,17 +24,20 @@ class BoatmanConf:
     apps: list[App]
     warehouses: list[dict]
     skip_fields: list[str]
+    extra_timestamps: dict
 
 
 def from_yaml(file_path: str):
     apps = set()
     skip_fields = []
+    extra_timestamps = {}
     with open(file_path) as file:
         resolved_conf = yaml.load(file, Loader=yaml.FullLoader)
         for app_dict in resolved_conf.get("apps", []):
             apps.add(App(app_dict["write_key"], app_dict["name"]))
         for f in resolved_conf.get("skip_fields", []):
             skip_fields.append(f)
+        extra_timestamps = resolved_conf.get("extra_timestamps", {})
     return BoatmanConf(
-        apps=list(apps), warehouses=resolved_conf["warehouses"], skip_fields=skip_fields
+        apps=list(apps), warehouses=resolved_conf["warehouses"], skip_fields=skip_fields, extra_timestamps = extra_timestamps
     )

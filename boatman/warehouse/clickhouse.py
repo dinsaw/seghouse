@@ -23,7 +23,7 @@ DT_TO_CH_DT = {
     DataType.BOOLEAN: "UInt8",
     DataType.STRING: "String",
     DataType.DATE: "Date",
-    DataType.DATETIME: "DateTime64",
+    DataType.DATETIME: "DateTime",
 }
 
 
@@ -60,7 +60,7 @@ class ClickHouse(Warehouse):
         logging.debug(f"Creating Database {schema}, result = {result}")
 
     # @abstractmethod
-    def create_table(self, schema: str, table: str, col_types: dict):
+    def create_table(self, schema: str, table: str, col_types: dict, non_null_columns: list[str]):
         """ Create table if does not exist"""
         if f"{schema}.{table}" in self.created_tables:
             return
@@ -70,7 +70,7 @@ class ClickHouse(Warehouse):
         else:
             column_type_defs = []
             for col_name, col_type in col_types.items():
-                column_type_defs.append(self.to_ch_column_def(col_name, col_type))
+                column_type_defs.append(self.to_ch_column_def(col_name, col_type, non_null_columns))
 
             sql = f"""
             CREATE TABLE IF NOT EXISTS {schema}.{table}
@@ -86,7 +86,7 @@ class ClickHouse(Warehouse):
 
         self.created_tables.add(f"{schema}.{table}")
 
-    def create_users_table(self, schema: str, col_types: dict):
+    def create_users_table(self, schema: str, col_types: dict, non_null_columns: list[str]):
         """ Create table if does not exist"""
         table = "users"
         if f"{schema}.{table}" in self.created_tables:
@@ -99,7 +99,7 @@ class ClickHouse(Warehouse):
             for col_name, col_type in col_types.items():
                 column_type_defs.append(
                     self.to_ch_column_def(
-                        col_name, col_type, ["received_at", "user_id", "message_id", "ver"]
+                        col_name, col_type, non_null_columns
                     )
                 )
 
@@ -118,7 +118,7 @@ class ClickHouse(Warehouse):
         self.created_tables.add(f"{schema}.{table}")
 
     def to_ch_column_def(
-        self, column_name, column_type, non_null_columns=["received_at", "message_id"]
+        self, column_name, column_type, non_null_columns=["received_at", "timestamp", "message_id"]
     ):
         ch_type = DT_TO_CH_DT.get(column_type)
         if ch_type is None:
@@ -168,15 +168,15 @@ class ClickHouse(Warehouse):
             return DataType.BOOLEAN
         elif "String" in ch_type:
             return DataType.STRING
-        elif "DateTime64" in ch_type:
+        elif "DateTime" in ch_type:
             return DataType.DATETIME
         elif "Date" in ch_type:
             return DataType.DATE
         else:
             raise Exception(f"unable to convert ch_type {ch_type}")
 
-    def add_column(self, schema: str, table: str, column: str, column_type: DataType):
-        sql = f"ALTER TABLE {schema}.{table} ADD COLUMN IF NOT EXISTS {self.to_ch_column_def(column, column_type)}"
+    def add_column(self, schema: str, table: str, column: str, column_type: DataType, non_null_columns: list[str]):
+        sql = f"ALTER TABLE {schema}.{table} ADD COLUMN IF NOT EXISTS {self.to_ch_column_def(column, column_type, non_null_columns)}"
         logging.debug(f"Running SQL = {sql}")
         result = self.clickhouse_client.execute(sql)
         logging.debug(
@@ -189,8 +189,10 @@ class ClickHouse(Warehouse):
         dataframe_util.cast_boolean_to_int(df, col_types)
         dataframe_util.mark_int_na_to_default(df, col_types)
         dataframe_util.mark_float_na_to_default(df, col_types)
+        
         table_column_types = self.describe_table(schema, table)
         dataframe_util.add_missing_columns(df, table_column_types)
+        logging.debug(f"{table} table_column_types = {table_column_types}")
         dataframe_util.fix_data_types(df, table_column_types)
 
         logging.debug(f"Insering df records = {df.to_dict('records')}")
@@ -200,3 +202,6 @@ class ClickHouse(Warehouse):
             types_check=True,
         )
         logging.info(f"Inserting Data Frame in {schema}.{table} result = {result}")
+
+    def close(self):
+        return
