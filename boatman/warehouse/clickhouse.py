@@ -187,18 +187,20 @@ class ClickHouse(Warehouse):
         df = dataframe.copy()
         col_types = dataframe_util.get_datatypes(df)
         dataframe_util.cast_boolean_to_int(df, col_types)
-        dataframe_util.mark_int_na_to_default(df, col_types)
-        dataframe_util.mark_float_na_to_default(df, col_types)
+        # dataframe_util.mark_int_na_to_default(df, col_types)
+        # dataframe_util.mark_float_na_to_default(df, col_types)
         
         table_column_types = self.describe_table(schema, table)
         dataframe_util.add_missing_columns(df, table_column_types)
         logging.debug(f"{table} table_column_types = {table_column_types}")
-        dataframe_util.fix_data_types(df, table_column_types)
+
+        df_dicts = df.to_dict("records")
+        dataframe_util.fix_data_types(df, df_dicts, table_column_types)
 
         logging.debug(f"Insering df records = {df.to_dict('records')}")
         result = self.clickhouse_client.execute(
             f"INSERT INTO {schema}.{table} VALUES",
-            df.to_dict("records"),
+            df_dicts,
             types_check=True,
         )
         logging.info(f"Inserting Data Frame in {schema}.{table} result = {result}")
