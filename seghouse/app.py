@@ -39,3 +39,7 @@ def send(config_file: str, s3_dir: str, source_dir: str, namespace: str):
         if s3_dir:
             logging.info(f"Removing directory {source_dir}")
             shutil.rmtree(source_dir)
+
+
+if __name__ == "__main__":
+    app(prog_name="seghouse")
