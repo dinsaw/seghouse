@@ -1,4 +1,5 @@
 import logging
+from typing import Set, List
 
 from clickhouse_driver import Client
 
@@ -31,7 +32,7 @@ DT_TO_CH_DT = {
 class ClickHouse(Warehouse):
     clickhouse_client: Client
     clickhouse_cluster: str
-    created_tables: set[str]
+    created_tables: Set[str]
 
     def connect(self):
         self.clickhouse_client = Client(
@@ -61,7 +62,7 @@ class ClickHouse(Warehouse):
         logging.debug(f"Creating Database {schema}, result = {result}")
 
     # @abstractmethod
-    def create_table(self, schema: str, table: str, col_types: dict, non_null_columns: list[str]):
+    def create_table(self, schema: str, table: str, col_types: dict, non_null_columns: List[str]):
         """ Create table if does not exist"""
         if f"{schema}.{table}" in self.created_tables:
             return
@@ -87,7 +88,7 @@ class ClickHouse(Warehouse):
 
         self.created_tables.add(f"{schema}.{table}")
 
-    def create_users_table(self, schema: str, col_types: dict, non_null_columns: list[str]):
+    def create_users_table(self, schema: str, col_types: dict, non_null_columns: List[str]):
         """ Create table if does not exist"""
         table = "users"
         if f"{schema}.{table}" in self.created_tables:
@@ -177,7 +178,7 @@ class ClickHouse(Warehouse):
         else:
             raise Exception(f"unable to convert ch_type {ch_type}")
 
-    def add_column(self, schema: str, table: str, column: str, column_type: DataType, non_null_columns: list[str]):
+    def add_column(self, schema: str, table: str, column: str, column_type: DataType, non_null_columns: List[str]):
         sql = f"ALTER TABLE {schema}.{table} ADD COLUMN IF NOT EXISTS {self.to_ch_column_def(column, column_type, non_null_columns)}"
         logging.debug(f"Running SQL = {sql}")
         result = self.clickhouse_client.execute(sql)

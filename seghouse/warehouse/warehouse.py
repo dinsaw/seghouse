@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from typing import List
 
 from ..config.data_type import DataType
 
@@ -23,12 +24,12 @@ class Warehouse(metaclass=ABCMeta):
         return
 
     @abstractmethod
-    def create_table(self, schema: str, table: str, col_types: dict, non_null_columns: list[str]):
+    def create_table(self, schema: str, table: str, col_types: dict, non_null_columns: List[str]):
         """ Create table if does not exist"""
         return
 
     @abstractmethod
-    def create_users_table(self, schema: str, col_types: dict, non_null_columns: list[str]):
+    def create_users_table(self, schema: str, col_types: dict, non_null_columns: List[str]):
         """ Create users table if does not exist"""
         return
 
@@ -37,7 +38,7 @@ class Warehouse(metaclass=ABCMeta):
         return
 
     @abstractmethod
-    def add_column(self, schema: str, table: str, column: str, column_type: DataType, non_null_columns: list[str]):
+    def add_column(self, schema: str, table: str, column: str, column_type: DataType, non_null_columns: List[str]):
         return
 
     @abstractmethod

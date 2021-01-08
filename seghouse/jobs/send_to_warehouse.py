@@ -4,6 +4,7 @@ import logging
 from dataclasses import dataclass
 from os import listdir
 from os.path import isfile, join
+from typing import List
 
 import humps
 import pandas as pd
@@ -81,8 +82,8 @@ class SendToWarehouseJob:
     source_dir: str
     warehouse_namespace: str
     warehouse_schema: str
-    warehouses: list[wh.Warehouse]
-    non_null_columns: list[str]
+    warehouses: List[wh.Warehouse]
+    non_null_columns: List[str]
 
     def __init__(self, app_conf: AppConf, source_dir: str, warehouse_namespace: str):
         self.app_conf = app_conf

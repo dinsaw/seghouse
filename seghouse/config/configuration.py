@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 
 import humps
 import yaml
@@ -22,9 +23,9 @@ yaml.add_path_resolver("!app", ["App"], dict)
 class AppConf:
     """Top level configuration class"""
 
-    apps: list[App]
-    warehouses: list[dict]
-    skip_fields: list[str]
+    apps: List[App]
+    warehouses: List[dict]
+    skip_fields: List[str]
     extra_timestamps: dict
 
 
