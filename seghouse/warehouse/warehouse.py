@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+
 from ..config.data_type import DataType
 
 

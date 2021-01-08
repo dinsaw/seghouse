@@ -1,16 +1,18 @@
 import gzip
 import json
-import humps
-from ..util import json_util, dataframe_util
-import pandas as pd
-from ..config.configuration import BoatmanConf
-from ..config import default_table_structure
-from ..warehouse import factory as whf, warehouse as wh
 import logging
+from dataclasses import dataclass
 from os import listdir
 from os.path import isfile, join
-from dataclasses import dataclass, field
+
+import humps
+import pandas as pd
+
+from ..config import default_table_structure
 from ..config import event_fields
+from ..config.configuration import AppConf
+from ..util import json_util, dataframe_util
+from ..warehouse import factory as whf, warehouse as wh
 
 
 @dataclass()
@@ -63,7 +65,7 @@ class EventDataFrames:
             if not dataframe_util.empty(df):
                 columns = df.columns.values
                 for ts_name, tz in extra_timestamps.items():
-                    if ts_name in columns :
+                    if ts_name in columns:
                         raise Exception(f"Column with {ts_name} already exist")
                     logging.info(f"Creating new timestamp {ts_name} for zone {tz}")
                     df[ts_name] = df["timestamp"].dt.tz_convert(tz).dt.tz_localize(None)
@@ -75,23 +77,23 @@ class EventDataFrames:
 class SendToWarehouseJob:
     """ Handles whole process to send files to warehouse """
 
-    boatman_conf: BoatmanConf
+    app_conf: AppConf
     source_dir: str
-    app: str
+    warehouse_namespace: str
     warehouse_schema: str
     warehouses: list[wh.Warehouse]
     non_null_columns: list[str]
 
-    def __init__(self, boatman_conf: BoatmanConf, source_dir: str, app: str):
-        self.boatman_conf = boatman_conf
+    def __init__(self, app_conf: AppConf, source_dir: str, warehouse_namespace: str):
+        self.app_conf = app_conf
         self.source_dir = source_dir
-        self.app = app
-        self.warehouse_schema = humps.decamelize(self.app)
+        self.warehouse_namespace = warehouse_namespace
+        self.warehouse_schema = humps.decamelize(self.warehouse_namespace)
         self.warehouses = []
-        for warehouse_conf in boatman_conf.warehouses:
+        for warehouse_conf in app_conf.warehouses:
             self.warehouses.append(whf.get_warehouse(warehouse_conf))
-        self.non_null_columns = [event_fields.RECEIVED_AT, event_fields.TIMESTAMP, event_fields.MESSAGE_ID] + list(self.boatman_conf.extra_timestamps.keys())
-
+        self.non_null_columns = [event_fields.RECEIVED_AT, event_fields.TIMESTAMP, event_fields.MESSAGE_ID] + list(
+            self.app_conf.extra_timestamps.keys())
 
     def execute(self):
         file_names = [
@@ -106,13 +108,13 @@ class SendToWarehouseJob:
     def process(self, file_paths):
         for file_path in file_paths:
             file_df = self.process_file(file_path)
-            
-            logging.info(f"Removing columns = {self.boatman_conf.skip_fields}")
-            file_df = file_df.drop(columns=self.boatman_conf.skip_fields)
-            
+
+            logging.info(f"Removing columns = {self.app_conf.skip_fields}")
+            file_df = file_df.drop(columns=self.app_conf.skip_fields)
+
             event_data_frames = self.break_down_by_type(file_df)
 
-            event_data_frames.set_extra_timestamps(self.boatman_conf.extra_timestamps)
+            event_data_frames.set_extra_timestamps(self.app_conf.extra_timestamps)
             self.store(event_data_frames)
             self.clean_up()
 
@@ -163,7 +165,7 @@ class SendToWarehouseJob:
 
     def ensure_users_table_structure(self, schema, default_structure, col_types):
         table = "users"
-        users_non_null_columns = self.non_null_columns+['ver', 'user_id']
+        users_non_null_columns = self.non_null_columns + ['ver', 'user_id']
         logging.debug(f"default_structure = {default_structure}")
         for warehouse in self.warehouses:
             warehouse.create_schema(schema)
@@ -178,7 +180,7 @@ class SendToWarehouseJob:
         if not dataframe_util.empty(tracks_df):
             selected_col_df = self.select_columns(
                 tracks_df,
-                list(default_table_structure.TRACKS.keys()) + list(self.boatman_conf.extra_timestamps.keys()),
+                list(default_table_structure.TRACKS.keys()) + list(self.app_conf.extra_timestamps.keys()),
                 default_table_structure.TRACKS_ALLOWED_FIELD_PREFIXES,
             )
             col_types = dataframe_util.get_datatypes(selected_col_df)
@@ -288,7 +290,8 @@ class SendToWarehouseJob:
                 if col_name not in table_col_types:
                     warehouse.add_column(schema, table, col_name, col_type, self.non_null_columns)
 
-    def select_columns(self, df, keep_columns, keep_columns_with_prefixes):
+    @staticmethod
+    def select_columns(df, keep_columns, keep_columns_with_prefixes):
         col_names = df.columns.values
         selected_col_names = set()
         for col_name in col_names:
@@ -300,7 +303,8 @@ class SendToWarehouseJob:
         logging.debug(f"selected_col_names = {selected_col_names}")
         return df[selected_col_names]
 
-    def process_file(self, file_path):
+    @staticmethod
+    def process_file(file_path):
         data = []
 
         if file_path.endswith(".gz"):
@@ -329,7 +333,8 @@ class SendToWarehouseJob:
         df = pd.DataFrame(flattened_data)
         return df
 
-    def break_down_by_type(self, df):
+    @staticmethod
+    def break_down_by_type(df):
         logging.info(f"Type break_downs = {df.groupby(['type']).count()}")
         event_data_frames = EventDataFrames(
             tracks=df[df["type"] == "track"].copy(),

@@ -1,6 +1,7 @@
-import sys
-from clickhouse_driver import Client
 import logging
+
+from clickhouse_driver import Client
+
 from .warehouse import Warehouse
 from ..config.data_type import DataType
 from ..util import dataframe_util
@@ -118,7 +119,7 @@ class ClickHouse(Warehouse):
         self.created_tables.add(f"{schema}.{table}")
 
     def to_ch_column_def(
-        self, column_name, column_type, non_null_columns=["received_at", "timestamp", "message_id"]
+            self, column_name, column_type, non_null_columns=["received_at", "timestamp", "message_id"]
     ):
         ch_type = DT_TO_CH_DT.get(column_type)
         if ch_type is None:
@@ -134,10 +135,11 @@ class ClickHouse(Warehouse):
         result = self.clickhouse_client.execute(sql)
         col_types = {}
         for x in result:
-            col_types[x[0]] = self.ch_type_to_boatman_type(x[1])
+            col_types[x[0]] = self.ch_type_to_seghouse_type(x[1])
         return col_types
 
-    def ch_type_to_boatman_type(self, ch_type):
+    @staticmethod
+    def ch_type_to_seghouse_type(ch_type):
         if "UInt8" in ch_type:
             return DataType.UINT8
         elif "UInt16" in ch_type:
@@ -189,7 +191,7 @@ class ClickHouse(Warehouse):
         dataframe_util.cast_boolean_to_int(df, col_types)
         # dataframe_util.mark_int_na_to_default(df, col_types)
         # dataframe_util.mark_float_na_to_default(df, col_types)
-        
+
         table_column_types = self.describe_table(schema, table)
         dataframe_util.add_missing_columns(df, table_column_types)
         logging.debug(f"{table} table_column_types = {table_column_types}")

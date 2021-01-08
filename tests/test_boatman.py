@@ -1,4 +1,4 @@
-from boatman import __version__
+from seghouse import __version__
 
 
 def test_version():

@@ -1,7 +1,4 @@
-from dataclasses import dataclass, field
-from datetime import datetime
 from .data_type import DataType
-
 
 BASE_STRUCTURE = {
     "message_id": DataType.STRING,

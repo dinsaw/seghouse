@@ -1,6 +1,8 @@
 import logging
+
 import numpy as np
 import pandas as pd
+
 from ..config import event_fields, data_type
 
 
@@ -55,8 +57,10 @@ def row_count(df):
 def empty(df):
     return row_count(df) == 0
 
+
 def mark_nan_to_none(df, col_types):
     return df.where(pd.notnull(df), None)
+
 
 def mark_string_na_to_default(df, col_types):
     for column_name, column_type in col_types.items():

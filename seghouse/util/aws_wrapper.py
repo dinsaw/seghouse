@@ -1,18 +1,21 @@
+import logging
 import subprocess
 import uuid
-import logging
+
+
 def s3_copy(s3_path, local_dir_path):
-	command = ["aws", "s3", "cp", s3_path, local_dir_path, "--recursive", "--exclude", "*", "--include", "*.gz"]
-	logging.info(f"command = {command}")
-	process = subprocess.run(command)
-	process.check_returncode()
+    command = ["aws", "s3", "cp", s3_path, local_dir_path, "--recursive", "--exclude", "*", "--include", "*.gz"]
+    logging.info(f"command = {command}")
+    process = subprocess.run(command)
+    process.check_returncode()
+
 
 def download_gz_files(s3_dir):
-	local_dir_name = str(uuid.uuid4()).replace("-", "")
-	local_dir_path = f"/tmp/{local_dir_name}"
-	subprocess.run(["mkdir", "-p", local_dir_path])
+    local_dir_name = str(uuid.uuid4()).replace("-", "")
+    local_dir_path = f"/tmp/{local_dir_name}"
+    subprocess.run(["mkdir", "-p", local_dir_path])
 
-	logging.info(f"Copying files to {local_dir_path}")
-	s3_copy(s3_dir, local_dir_path)
-	
-	return local_dir_path
+    logging.info(f"Copying files to {local_dir_path}")
+    s3_copy(s3_dir, local_dir_path)
+
+    return local_dir_path

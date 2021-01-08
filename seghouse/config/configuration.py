@@ -1,4 +1,5 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+
 import humps
 import yaml
 
@@ -18,7 +19,7 @@ yaml.add_path_resolver("!app", ["App"], dict)
 
 
 @dataclass(frozen=True, eq=True)
-class BoatmanConf:
+class AppConf:
     """Top level configuration class"""
 
     apps: list[App]
@@ -30,7 +31,6 @@ class BoatmanConf:
 def from_yaml(file_path: str):
     apps = set()
     skip_fields = []
-    extra_timestamps = {}
     with open(file_path) as file:
         resolved_conf = yaml.load(file, Loader=yaml.FullLoader)
         for app_dict in resolved_conf.get("apps", []):
@@ -38,6 +38,7 @@ def from_yaml(file_path: str):
         for f in resolved_conf.get("skip_fields", []):
             skip_fields.append(f)
         extra_timestamps = resolved_conf.get("extra_timestamps", {})
-    return BoatmanConf(
-        apps=list(apps), warehouses=resolved_conf["warehouses"], skip_fields=skip_fields, extra_timestamps = extra_timestamps
+    return AppConf(
+        apps=list(apps), warehouses=resolved_conf["warehouses"], skip_fields=skip_fields,
+        extra_timestamps=extra_timestamps
     )
