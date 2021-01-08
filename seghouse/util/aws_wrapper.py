@@ -2,6 +2,8 @@ import logging
 import subprocess
 import uuid
 
+TMP_DIR_PREFIX = "seghouse"
+
 
 def s3_copy(s3_path, local_dir_path):
     command = ["aws", "s3", "cp", s3_path, local_dir_path, "--recursive", "--exclude", "*", "--include", "*.gz"]
@@ -12,7 +14,7 @@ def s3_copy(s3_path, local_dir_path):
 
 def download_gz_files(s3_dir):
     local_dir_name = str(uuid.uuid4()).replace("-", "")
-    local_dir_path = f"/tmp/{local_dir_name}"
+    local_dir_path = f"/tmp/{TMP_DIR_PREFIX}-{local_dir_name}"
     subprocess.run(["mkdir", "-p", local_dir_path])
 
     logging.info(f"Copying files to {local_dir_path}")
