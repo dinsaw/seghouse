@@ -47,7 +47,7 @@ class EventDataFrames:
         if not dataframe_util.empty(self.tracks):
             self.tracks["original_event"] = self.tracks["event"]
             self.tracks["event"] = self.tracks["event"].apply(
-                lambda x: humps.decamelize(x.replace(" ", "").replace("&", "")).lower()
+                lambda x: humps.decamelize(x.replace(" ", "").replace("&", "and")).lower()
             )
 
     def summary(self):
