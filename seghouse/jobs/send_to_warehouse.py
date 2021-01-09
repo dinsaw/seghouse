@@ -152,7 +152,7 @@ class SendToWarehouseJob:
                 col_types,
             )
             for warehouse in self.warehouses:
-                warehouse.insert_df(self.warehouse_schema, "identities", identities_df)
+                warehouse.insert_df(self.warehouse_schema, default_table_structure.IDENTITIES_TABLE, identities_df)
 
             self.store_users(identities_df)
 
@@ -203,7 +203,7 @@ class SendToWarehouseJob:
                 col_types,
             )
             for warehouse in self.warehouses:
-                warehouse.insert_df(self.warehouse_schema, "tracks", selected_col_df)
+                warehouse.insert_df(self.warehouse_schema, default_table_structure.TRACKS_TABLE, selected_col_df)
 
             self.store_individual_events(tracks_df)
 
@@ -241,7 +241,7 @@ class SendToWarehouseJob:
                 col_types,
             )
             for warehouse in self.warehouses:
-                warehouse.insert_df(self.warehouse_schema, "identities", screens_df)
+                warehouse.insert_df(self.warehouse_schema, default_table_structure.SCREENS_TABLE, screens_df)
 
     def store_pages(self, pages_df):
         if not dataframe_util.empty(pages_df):
@@ -257,7 +257,7 @@ class SendToWarehouseJob:
                 col_types,
             )
             for warehouse in self.warehouses:
-                warehouse.insert_df(self.warehouse_schema, "identities", pages_df)
+                warehouse.insert_df(self.warehouse_schema, default_table_structure.PAGES_TABLE, pages_df)
 
     def store_groups(self, groups_df):
         if not dataframe_util.empty(groups_df):
