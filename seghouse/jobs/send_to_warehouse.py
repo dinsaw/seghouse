@@ -44,10 +44,11 @@ class EventDataFrames:
                     if timestamp_field in columns:
                         df[timestamp_field] = pd.to_datetime(df[timestamp_field])
 
-        self.tracks["original_event"] = self.tracks["event"]
-        self.tracks["event"] = self.tracks["event"].apply(
-            lambda x: humps.decamelize(x.replace(" ", "")).lower()
-        )
+        if not dataframe_util.empty(self.tracks):
+            self.tracks["original_event"] = self.tracks["event"]
+            self.tracks["event"] = self.tracks["event"].apply(
+                lambda x: humps.decamelize(x.replace(" ", "")).lower()
+            )
 
     def summary(self):
         return f"""
