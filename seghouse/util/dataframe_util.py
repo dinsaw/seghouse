@@ -113,10 +113,8 @@ def fix_data_types(df, df_dicts, expected_col_types):
                     # Let us hope similar integers will be handled wisely by downstream
                     continue
                 elif df_col_types[column_name] in data_type.FLOAT_DATATYPES:
-                    logging.info(f"value to be converted = {df[column_name]}")
                     cast_to_int(column_name, df_dicts)
                 elif df_col_types[column_name] == data_type.DataType.STRING:
-                    logging.info(f"value to be converted = {df[column_name]}")
                     cast_to_int(column_name, df_dicts)
                 else:
                     raise Exception(

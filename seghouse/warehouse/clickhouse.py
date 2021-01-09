@@ -56,7 +56,7 @@ class ClickHouse(Warehouse):
         """ Create schema or namespace if does not exist"""
         create_db_sql = f"CREATE DATABASE IF NOT EXISTS {schema}"
         if self.clickhouse_cluster:
-            create_db_sql = f"{create_db_sql} ON CLUSTER {clickhouse_cluster}"
+            create_db_sql = f"{create_db_sql} ON CLUSTER {self.clickhouse_cluster}"
 
         result = self.clickhouse_client.execute(create_db_sql)
         logging.debug(f"Creating Database {schema}, result = {result}")
@@ -79,8 +79,8 @@ class ClickHouse(Warehouse):
             (
                 {', '.join(column_type_defs)}
             ) ENGINE = ReplacingMergeTree()
-            PARTITION BY toDate(received_at)
-            ORDER BY (received_at, message_id)
+            PARTITION BY toDate(timestamp)
+            ORDER BY (timestamp, message_id)
             """
         logging.debug(f"Running SQL = {sql}")
         result = self.clickhouse_client.execute(sql)
@@ -110,7 +110,7 @@ class ClickHouse(Warehouse):
             (
                 {', '.join(column_type_defs)}
             ) ENGINE = ReplacingMergeTree(ver)
-            PARTITION BY (toDate(received_at), user_id)
+            PARTITION BY (toDate(timestamp), user_id)
             ORDER BY (user_id)
             """
         logging.debug(f"Running SQL = {sql}")
@@ -119,8 +119,9 @@ class ClickHouse(Warehouse):
 
         self.created_tables.add(f"{schema}.{table}")
 
+    @staticmethod
     def to_ch_column_def(
-            self, column_name, column_type, non_null_columns=["received_at", "timestamp", "message_id"]
+            column_name, column_type, non_null_columns=["received_at", "timestamp", "message_id"]
     ):
         ch_type = DT_TO_CH_DT.get(column_type)
         if ch_type is None:
@@ -200,13 +201,12 @@ class ClickHouse(Warehouse):
         df_dicts = df.to_dict("records")
         dataframe_util.fix_data_types(df, df_dicts, table_column_types)
 
-        logging.debug(f"Insering df records = {df.to_dict('records')}")
         result = self.clickhouse_client.execute(
             f"INSERT INTO {schema}.{table} VALUES",
             df_dicts,
             types_check=True,
         )
-        logging.info(f"Inserting Data Frame in {schema}.{table} result = {result}")
+        logging.info(f"Inserting DataFrame in {schema}.{table}, result = {result}")
 
     def close(self):
         return

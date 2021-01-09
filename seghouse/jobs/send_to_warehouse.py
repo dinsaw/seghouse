@@ -37,8 +37,10 @@ class EventDataFrames:
             self.aliases,
         ]:
             if not dataframe_util.empty(df):
-                df["timestamp"] = pd.to_datetime(df["timestamp"])
-                df["received_at"] = pd.to_datetime(df["received_at"])
+                columns = df.columns.values
+                for timestamp_field in event_fields.TIMESTAMP_FIELDS:
+                    if timestamp_field in columns:
+                        df[timestamp_field] = pd.to_datetime(df[timestamp_field])
 
         self.tracks["original_event"] = self.tracks["event"]
         self.tracks["event"] = self.tracks["event"].apply(
@@ -108,7 +110,8 @@ class SendToWarehouseJob:
 
     def process(self, file_paths):
         for file_path in file_paths:
-            file_df = self.process_file(file_path)
+            logging.info(f"Started processing {file_path}")
+            file_df = self.get_file_df(file_path)
 
             logging.info(f"Removing columns = {self.app_conf.skip_fields}")
             file_df = file_df.drop(columns=self.app_conf.skip_fields)
@@ -117,7 +120,8 @@ class SendToWarehouseJob:
 
             event_data_frames.set_extra_timestamps(self.app_conf.extra_timestamps)
             self.store(event_data_frames)
-            self.clean_up()
+            logging.info(f"Completed processing {file_path}")
+        self.clean_up()
 
     def store(self, event_data_frames: EventDataFrames):
         self.store_identities(event_data_frames.identities)
@@ -151,7 +155,7 @@ class SendToWarehouseJob:
 
     def store_users(self, identities_df):
         users_df = identities_df.copy()
-        users_df['ver'] = users_df['received_at'].astype(int)
+        users_df['ver'] = users_df['timestamp'].astype(int)
 
         col_types = dataframe_util.get_datatypes(users_df)
         logging.debug(f"Col, Types = {col_types}")
@@ -309,7 +313,7 @@ class SendToWarehouseJob:
         return df[selected_col_names]
 
     @staticmethod
-    def process_file(file_path):
+    def get_file_df(file_path):
         data = []
 
         if file_path.endswith(".gz"):
@@ -340,7 +344,6 @@ class SendToWarehouseJob:
 
     @staticmethod
     def break_down_by_type(df):
-        logging.info(f"Type break_downs = {df.groupby(['type']).count()}")
         event_data_frames = EventDataFrames(
             tracks=df[df["type"] == "track"].copy(),
             identities=df[df["type"] == "identify"].copy(),
