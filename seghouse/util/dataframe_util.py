@@ -95,7 +95,9 @@ def add_missing_columns(df, col_types):
 
 
 def fix_data_types(df, df_dicts, expected_col_types):
+    """ Fixes data types and returns misfits if not able to fix """
     df_col_types = get_datatypes(df)
+    misfits = []
 
     for column_name, column_type in expected_col_types.items():
         if column_name not in df_col_types:
@@ -105,19 +107,17 @@ def fix_data_types(df, df_dicts, expected_col_types):
             continue
         else:
             if expected_col_types[column_name] == data_type.DataType.STRING:
-                for d in df_dicts:
-                    if d[column_name] is not None:
-                        d[column_name] = str(d[column_name])
+                cast_to_str(column_name, df_dicts)
             elif expected_col_types[column_name] in data_type.INT_DATATYPES:
                 if df_col_types[column_name] in data_type.INT_DATATYPES:
                     # Let us hope similar integers will be handled wisely by downstream
                     continue
                 elif df_col_types[column_name] in data_type.FLOAT_DATATYPES:
                     logging.info(f"value to be converted = {df[column_name]}")
-                    for d in df_dicts:
-                        if d[column_name] is not None:
-                            d[column_name] = int(d[column_name])
-                    # df[column_name] = df[column_name].astype(object)
+                    cast_to_int(column_name, df_dicts)
+                elif df_col_types[column_name] == data_type.DataType.STRING:
+                    logging.info(f"value to be converted = {df[column_name]}")
+                    cast_to_int(column_name, df_dicts)
                 else:
                     raise Exception(
                         f"Dont know how to handle. Column = {column_name}, Expected {expected_col_types[column_name]}, Actual {df_col_types[column_name]}"
@@ -127,10 +127,7 @@ def fix_data_types(df, df_dicts, expected_col_types):
                     # Let us hope similar float variations will be handled wisely by downstream
                     continue
                 elif df_col_types[column_name] in data_type.INT_DATATYPES:
-                    for d in df_dicts:
-                        if d[column_name] is not None:
-                            d[column_name] = float(d[column_name])
-                    # df[column_name] = df[column_name].astype(float)
+                    cast_to_float(column_name, df_dicts)
                 else:
                     raise Exception(
                         f"Dont know how to handle. Column = {column_name}, Expected {expected_col_types[column_name]}, Actual {df_col_types[column_name]}"
@@ -139,3 +136,21 @@ def fix_data_types(df, df_dicts, expected_col_types):
                 raise Exception(
                     f"Dont know how to handle. Column = {column_name}, Expected {expected_col_types[column_name]}, Actual {df_col_types[column_name]}"
                 )
+
+
+def cast_to_float(column_name, df_dicts):
+    for d in df_dicts:
+        if d[column_name] is not None:
+            d[column_name] = float(d[column_name])
+
+
+def cast_to_str(column_name, df_dicts):
+    for d in df_dicts:
+        if d[column_name] is not None:
+            d[column_name] = str(d[column_name])
+
+
+def cast_to_int(column_name, df_dicts):
+    for d in df_dicts:
+        if d[column_name] is not None:
+            d[column_name] = int(d[column_name])

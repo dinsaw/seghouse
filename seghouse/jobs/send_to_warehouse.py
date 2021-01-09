@@ -140,7 +140,7 @@ class SendToWarehouseJob:
 
             self.ensure_table_structure(
                 self.warehouse_schema,
-                "identities",
+                default_table_structure.IDENTITIES_TABLE,
                 default_table_structure.IDENTITIES,
                 col_types,
             )
@@ -162,10 +162,10 @@ class SendToWarehouseJob:
             col_types,
         )
         for warehouse in self.warehouses:
-            warehouse.insert_df(self.warehouse_schema, "users", users_df)
+            warehouse.insert_df(self.warehouse_schema, default_table_structure.USERS_TABLE, users_df)
 
     def ensure_users_table_structure(self, schema, default_structure, col_types):
-        table = "users"
+        table = default_table_structure.USERS_TABLE
         users_non_null_columns = self.non_null_columns + ['ver', 'user_id']
         logging.debug(f"default_structure = {default_structure}")
         for warehouse in self.warehouses:
@@ -191,7 +191,7 @@ class SendToWarehouseJob:
 
             self.ensure_table_structure(
                 self.warehouse_schema,
-                "tracks",
+                default_table_structure.TRACKS_TABLE,
                 default_table_structure.TRACKS,
                 col_types,
             )
@@ -206,15 +206,19 @@ class SendToWarehouseJob:
             event_df = tracks_df[tracks_df["event"] == event].copy()
             event_col_types = dataframe_util.get_datatypes(event_df)
             logging.debug(f"Event = {event}, Col, Types = {event_col_types}")
+            table = event
+            if table in default_table_structure.DEFAULT_TABLES:
+                table = f"esc_{table}"
+
             event_df = dataframe_util.mark_nan_to_none(event_df, event_col_types)
             self.ensure_table_structure(
                 self.warehouse_schema,
-                event,
+                table,
                 default_table_structure.TRACKS,
                 event_col_types,
             )
             for warehouse in self.warehouses:
-                warehouse.insert_df(self.warehouse_schema, event, event_df)
+                warehouse.insert_df(self.warehouse_schema, table, event_df)
 
     def store_screens(self, screens_df):
         if not dataframe_util.empty(screens_df):
@@ -225,7 +229,7 @@ class SendToWarehouseJob:
 
             self.ensure_table_structure(
                 self.warehouse_schema,
-                "screens",
+                default_table_structure.SCREENS_TABLE,
                 default_table_structure.SCREENS,
                 col_types,
             )
@@ -241,7 +245,7 @@ class SendToWarehouseJob:
 
             self.ensure_table_structure(
                 self.warehouse_schema,
-                "pages",
+                default_table_structure.PAGES_TABLE,
                 default_table_structure.PAGES,
                 col_types,
             )
@@ -257,7 +261,7 @@ class SendToWarehouseJob:
 
             self.ensure_table_structure(
                 self.warehouse_schema,
-                "groups",
+                default_table_structure.GROUPS_TABLE,
                 default_table_structure.GROUPS,
                 col_types,
             )
@@ -273,8 +277,8 @@ class SendToWarehouseJob:
 
             self.ensure_table_structure(
                 self.warehouse_schema,
-                "aliases",
-                default_table_structure.ALIAS,
+                default_table_structure.ALIASES_TABLE,
+                default_table_structure.ALIASES,
                 col_types,
             )
             for warehouse in self.warehouses:
