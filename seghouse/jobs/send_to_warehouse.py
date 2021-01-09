@@ -15,6 +15,8 @@ from ..config.configuration import AppConf
 from ..util import json_util, dataframe_util
 from ..warehouse import factory as whf, warehouse as wh
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass()
 class EventDataFrames:
@@ -70,10 +72,10 @@ class EventDataFrames:
                 for ts_name, tz in extra_timestamps.items():
                     if ts_name in columns:
                         raise Exception(f"Column with {ts_name} already exist")
-                    logging.info(f"Creating new timestamp {ts_name} for zone {tz}")
+                    logger.info(f"Creating new timestamp {ts_name} for zone {tz}")
                     df[ts_name] = df["timestamp"].dt.tz_convert(tz).dt.tz_localize(None)
-                    # logging.info(f"{df['timestamp']}")
-                    # logging.info(f"{df[ts_name]}")
+                    # logger.info(f"{df['timestamp']}")
+                    # logger.info(f"{df[ts_name]}")
                     # raise Exception("99")
 
 
@@ -104,23 +106,23 @@ class SendToWarehouseJob:
         ]
         file_paths = [self.source_dir + "/" + x for x in file_names]
 
-        logging.info(f"Files to be sent to warehouses are : {file_paths}")
+        logger.info(f"Files to be sent to warehouses are : {file_paths}")
 
         self.process(file_paths)
 
     def process(self, file_paths):
         for file_path in file_paths:
-            logging.info(f"Started processing {file_path}")
+            logger.info(f"Started processing {file_path}")
             file_df = self.get_file_df(file_path)
 
-            logging.info(f"Removing columns = {self.app_conf.skip_fields}")
+            logger.info(f"Removing columns = {self.app_conf.skip_fields}")
             file_df = file_df.drop(columns=self.app_conf.skip_fields)
 
             event_data_frames = self.break_down_by_type(file_df)
 
             event_data_frames.set_extra_timestamps(self.app_conf.extra_timestamps)
             self.store(event_data_frames)
-            logging.info(f"Completed processing {file_path}")
+            logger.info(f"Completed processing {file_path}")
         self.clean_up()
 
     def store(self, event_data_frames: EventDataFrames):
@@ -138,7 +140,7 @@ class SendToWarehouseJob:
     def store_identities(self, identities_df):
         if not dataframe_util.empty(identities_df):
             col_types = dataframe_util.get_datatypes(identities_df)
-            logging.debug(f"Col, Types = {col_types}")
+            logger.debug(f"Col, Types = {col_types}")
 
             identities_df = dataframe_util.mark_nan_to_none(identities_df, col_types)
 
@@ -158,7 +160,7 @@ class SendToWarehouseJob:
         users_df['ver'] = users_df['timestamp'].astype(int)
 
         col_types = dataframe_util.get_datatypes(users_df)
-        logging.debug(f"Col, Types = {col_types}")
+        logger.debug(f"Col, Types = {col_types}")
 
         self.ensure_users_table_structure(
             self.warehouse_schema,
@@ -171,7 +173,7 @@ class SendToWarehouseJob:
     def ensure_users_table_structure(self, schema, default_structure, col_types):
         table = default_table_structure.USERS_TABLE
         users_non_null_columns = self.non_null_columns + ['ver', 'user_id']
-        logging.debug(f"default_structure = {default_structure}")
+        logger.debug(f"default_structure = {default_structure}")
         for warehouse in self.warehouses:
             warehouse.create_schema(schema)
             warehouse.create_users_table(schema, default_structure, users_non_null_columns)
@@ -189,7 +191,7 @@ class SendToWarehouseJob:
                 default_table_structure.TRACKS_ALLOWED_FIELD_PREFIXES,
             )
             col_types = dataframe_util.get_datatypes(selected_col_df)
-            logging.debug(f"Col, Types = {col_types}")
+            logger.debug(f"Col, Types = {col_types}")
 
             selected_col_df = dataframe_util.mark_nan_to_none(selected_col_df, col_types)
 
@@ -209,7 +211,7 @@ class SendToWarehouseJob:
         for event in all_events:
             event_df = tracks_df[tracks_df["event"] == event].copy()
             event_col_types = dataframe_util.get_datatypes(event_df)
-            logging.debug(f"Event = {event}, Col, Types = {event_col_types}")
+            logger.debug(f"Event = {event}, Col, Types = {event_col_types}")
             table = event
             if table in default_table_structure.DEFAULT_TABLES:
                 table = f"esc_{table}"
@@ -227,7 +229,7 @@ class SendToWarehouseJob:
     def store_screens(self, screens_df):
         if not dataframe_util.empty(screens_df):
             col_types = dataframe_util.get_datatypes(screens_df)
-            logging.info(f"Col, Types = {col_types}")
+            logger.info(f"Col, Types = {col_types}")
 
             screens_df = dataframe_util.mark_nan_to_none(screens_df, col_types)
 
@@ -243,7 +245,7 @@ class SendToWarehouseJob:
     def store_pages(self, pages_df):
         if not dataframe_util.empty(pages_df):
             col_types = dataframe_util.get_datatypes(pages_df)
-            logging.info(f"Col, Types = {col_types}")
+            logger.info(f"Col, Types = {col_types}")
 
             pages_df = dataframe_util.mark_nan_to_none(pages_df, col_types)
 
@@ -259,7 +261,7 @@ class SendToWarehouseJob:
     def store_groups(self, groups_df):
         if not dataframe_util.empty(groups_df):
             col_types = dataframe_util.get_datatypes(groups_df)
-            logging.debug(f"Col, Types = {col_types}")
+            logger.debug(f"Col, Types = {col_types}")
 
             groups_df = dataframe_util.mark_nan_to_none(groups_df, col_types)
 
@@ -275,7 +277,7 @@ class SendToWarehouseJob:
     def store_aliases(self, aliases_df):
         if not dataframe_util.empty(aliases_df):
             col_types = dataframe_util.get_datatypes(aliases_df)
-            logging.debug(f"Col, Types = {col_types}")
+            logger.debug(f"Col, Types = {col_types}")
 
             aliases_df = dataframe_util.mark_nan_to_none(aliases_df, col_types)
 
@@ -289,7 +291,7 @@ class SendToWarehouseJob:
                 warehouse.insert_df(self.warehouse_schema, "identities", aliases_df)
 
     def ensure_table_structure(self, schema, table, default_structure, col_types):
-        logging.debug(f"default_structure = {default_structure}")
+        logger.debug(f"default_structure = {default_structure}")
         for warehouse in self.warehouses:
             warehouse.create_schema(schema)
             warehouse.create_table(schema, table, default_structure, self.non_null_columns)
@@ -309,7 +311,7 @@ class SendToWarehouseJob:
 
             if col_name.startswith(keep_columns_with_prefixes):
                 selected_col_names.add(col_name)
-        logging.debug(f"selected_col_names = {selected_col_names}")
+        logger.debug(f"selected_col_names = {selected_col_names}")
         return df[selected_col_names]
 
     @staticmethod
@@ -327,7 +329,7 @@ class SendToWarehouseJob:
                 snake_cased_event_json = humps.decamelize(event_json)
                 data.append(snake_cased_event_json)
 
-        logging.debug(
+        logger.debug(
             f"first 5 event json objects = {json.dumps(data[0:5], indent=4, default=str)}"
         )
 
@@ -335,7 +337,7 @@ class SendToWarehouseJob:
         for d in data:
             flattened_data.append(json_util.flatten_json(d))
 
-        logging.debug(
+        logger.debug(
             f"first 5 flattened event json objects = {json.dumps(flattened_data[0:5], indent=4, default=str)}"
         )
 
@@ -352,5 +354,5 @@ class SendToWarehouseJob:
             groups=df[df["type"] == "group"].copy(),
             aliases=df[df["type"] == "alias"].copy(),
         )
-        logging.info(f"Event Data Frames Summary = {event_data_frames.summary()}")
+        logger.info(f"Event Data Frames Summary = {event_data_frames.summary()}")
         return event_data_frames

@@ -7,6 +7,8 @@ from .warehouse import Warehouse
 from ..config.data_type import DataType
 from ..util import dataframe_util
 
+logger = logging.getLogger(__name__)
+
 SAMPLE_QUERY = "SELECT 1"
 DT_TO_CH_DT = {
     DataType.UINT8: "UInt8",
@@ -42,11 +44,11 @@ class ClickHouse(Warehouse):
             password=self.conf_dict["password"],
         )
         self.clickhouse_cluster = self.conf_dict.get("cluster")
-        logging.info("connecting to ClickHouse")
-        logging.info(f"Running sample query {SAMPLE_QUERY}")
+        logger.info("connecting to ClickHouse")
+        logger.info(f"Running sample query {SAMPLE_QUERY}")
 
         result = self.clickhouse_client.execute(SAMPLE_QUERY)
-        logging.info(f"Result = {result}")
+        logger.info(f"Result = {result}")
 
         self.created_tables = set()
         return True
@@ -59,7 +61,7 @@ class ClickHouse(Warehouse):
             create_db_sql = f"{create_db_sql} ON CLUSTER {self.clickhouse_cluster}"
 
         result = self.clickhouse_client.execute(create_db_sql)
-        logging.debug(f"Creating Database {schema}, result = {result}")
+        logger.debug(f"Creating Database {schema}, result = {result}")
 
     # @abstractmethod
     def create_table(self, schema: str, table: str, col_types: dict, non_null_columns: List[str]):
@@ -82,9 +84,9 @@ class ClickHouse(Warehouse):
             PARTITION BY toDate(timestamp)
             ORDER BY (timestamp, message_id)
             """
-        logging.debug(f"Running SQL = {sql}")
+        logger.debug(f"Running SQL = {sql}")
         result = self.clickhouse_client.execute(sql)
-        logging.debug(f"Creating Table {schema}.{table}, result = {result}")
+        logger.debug(f"Creating Table {schema}.{table}, result = {result}")
 
         self.created_tables.add(f"{schema}.{table}")
 
@@ -113,9 +115,9 @@ class ClickHouse(Warehouse):
             PARTITION BY (toDate(timestamp), user_id)
             ORDER BY (user_id)
             """
-        logging.debug(f"Running SQL = {sql}")
+        logger.debug(f"Running SQL = {sql}")
         result = self.clickhouse_client.execute(sql)
-        logging.debug(f"Creating Table {schema}.{table}, result = {result}")
+        logger.debug(f"Creating Table {schema}.{table}, result = {result}")
 
         self.created_tables.add(f"{schema}.{table}")
 
@@ -133,7 +135,7 @@ class ClickHouse(Warehouse):
     # @abstractmethod
     def describe_table(self, schema: str, table: str):
         sql = f"DESCRIBE TABLE {schema}.{table}"
-        logging.debug(f"Running SQL = {sql}")
+        logger.debug(f"Running SQL = {sql}")
         result = self.clickhouse_client.execute(sql)
         col_types = {}
         for x in result:
@@ -181,9 +183,9 @@ class ClickHouse(Warehouse):
 
     def add_column(self, schema: str, table: str, column: str, column_type: DataType, non_null_columns: List[str]):
         sql = f"ALTER TABLE {schema}.{table} ADD COLUMN IF NOT EXISTS {self.to_ch_column_def(column, column_type, non_null_columns)}"
-        logging.debug(f"Running SQL = {sql}")
+        logger.debug(f"Running SQL = {sql}")
         result = self.clickhouse_client.execute(sql)
-        logging.debug(
+        logger.debug(
             f"Adding column to {schema}.{table}, {column}, {column_type} result = {result}"
         )
 
@@ -196,7 +198,7 @@ class ClickHouse(Warehouse):
 
         table_column_types = self.describe_table(schema, table)
         dataframe_util.add_missing_columns(df, table_column_types)
-        logging.debug(f"{table} table_column_types = {table_column_types}")
+        logger.debug(f"{table} table_column_types = {table_column_types}")
 
         df_dicts = df.to_dict("records")
         dataframe_util.fix_data_types(df, df_dicts, table_column_types)
@@ -206,7 +208,7 @@ class ClickHouse(Warehouse):
             df_dicts,
             types_check=True,
         )
-        logging.info(f"Inserting DataFrame in {schema}.{table}, result = {result}")
+        logger.info(f"Inserting DataFrame in {schema}.{table}, result = {result}")
 
     def close(self):
         return

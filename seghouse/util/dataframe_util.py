@@ -5,6 +5,8 @@ import pandas as pd
 
 from ..config import event_fields, data_type
 
+logger = logging.getLogger(__name__)
+
 
 def get_datatypes(df):
     column_names = list(df.columns.values)
@@ -43,7 +45,7 @@ def first_valid_value(df, column):
     valid_index = df[column].first_valid_index()
     if valid_index is None:
         return None
-    logging.debug(
+    logger.debug(
         f"valid_index = {valid_index}, column = {column}, df[column][{valid_index}] = {df[column][valid_index]}"
     )
     return df[column][valid_index]

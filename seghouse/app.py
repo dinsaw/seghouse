@@ -1,5 +1,6 @@
-import logging
+import logging.config
 import shutil
+from os import path
 
 import click
 
@@ -7,7 +8,9 @@ from .config import configuration
 from .jobs import send_to_warehouse
 from .util import aws_wrapper
 
-logging.basicConfig(level=logging.INFO)
+log_file_path = path.join(path.dirname(path.abspath(__file__)), 'logging.conf')
+logging.config.fileConfig(log_file_path)
+logger = logging.getLogger(__name__)
 
 
 @click.group()
@@ -26,7 +29,7 @@ def app():
 @click.option("--namespace", "-ns", required=True, help="Will be used to create database/namespace in warehouse", )
 def send(config_file: str, s3_dir: str, source_dir: str, namespace: str):
     """Send Segment Files to different warehouses """
-    logging.info(f"config_file={config_file}")
+    logger.info(f"config_file={config_file}")
     app_conf = configuration.from_yaml(config_file)
 
     try:
@@ -37,5 +40,5 @@ def send(config_file: str, s3_dir: str, source_dir: str, namespace: str):
         job.execute()
     finally:
         if s3_dir:
-            logging.info(f"Removing directory {source_dir}")
+            logger.info(f"Removing directory {source_dir}")
             shutil.rmtree(source_dir)
