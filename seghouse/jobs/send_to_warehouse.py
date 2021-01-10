@@ -117,7 +117,7 @@ class SendToWarehouseJob:
             file_df = self.get_file_df(file_path)
 
             logger.info(f"Removing columns = {self.app_conf.skip_fields}")
-            file_df = file_df.drop(columns=self.app_conf.skip_fields)
+            file_df = file_df.drop(columns=self.app_conf.skip_fields, errors='ignore')
 
             event_data_frames = self.break_down_by_type(file_df)
 
