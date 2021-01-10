@@ -116,6 +116,10 @@ class SendToWarehouseJob:
             logger.info(f"Started processing {file_path}")
             file_df = self.get_file_df(file_path)
 
+            if dataframe_util.empty(file_df):
+                logger.info(f"File {file_path} is empty")
+                continue
+
             logger.info(f"Removing columns = {self.app_conf.skip_fields}")
             file_df = file_df.drop(columns=self.app_conf.skip_fields, errors='ignore')
 
