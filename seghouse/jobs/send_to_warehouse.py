@@ -7,6 +7,7 @@ from os.path import isfile, join
 from typing import List
 
 import humps
+import numpy as np
 import pandas as pd
 
 from ..config import default_table_structure
@@ -74,10 +75,9 @@ class EventDataFrames:
                     if ts_name in columns:
                         raise Exception(f"Column with {ts_name} already exist")
                     logger.info(f"Creating new timestamp {ts_name} for zone {tz}")
-                    df[ts_name] = df["timestamp"].dt.tz_convert(tz).dt.tz_localize(None)
-                    # logger.info(f"{df['timestamp']}")
-                    # logger.info(f"{df[ts_name]}")
-                    # raise Exception("99")
+                    df[ts_name] = df[event_fields.TIMESTAMP].dt.tz_convert(tz).dt.tz_localize(None)
+
+                df[event_fields.UNIX_TIMESTAMP_IN_MILLIS] = df[event_fields.TIMESTAMP].astype(np.int64) / int(1e6)
 
 
 class SendToWarehouseJob:

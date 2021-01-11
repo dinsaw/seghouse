@@ -5,7 +5,12 @@ BASE_STRUCTURE = {
     "anonymous_id": DataType.STRING,
     "received_at": DataType.DATETIME,
     "timestamp": DataType.DATETIME,
+    "unix_timestamp_in_millis": DataType.INT64,
     "ip": DataType.STRING,
+    "channel": DataType.STRING,
+    "user_id": DataType.STRING,
+    "write_key": DataType.STRING,
+    "type": DataType.STRING
 }
 
 EVENT_SPECIFIC = {
@@ -19,6 +24,7 @@ TRACKS_ALLOWED_FIELD_PREFIXES = (
     "context_",
     "traits_",
     "geoip_",
+    "e_"
 )
 
 IDENTITIES = dict(BASE_STRUCTURE)
