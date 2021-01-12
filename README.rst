@@ -5,7 +5,7 @@ Send Segment event from S3 files to warehouse.
 
 Features
 ========
-- Sends S3 files to warehouse
+- Stores Segment events from S3 files to Data Warehouse
 - Supported warehouses
     - ClickHouse
 - Fixes data type issues
