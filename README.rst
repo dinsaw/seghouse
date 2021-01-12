@@ -14,8 +14,8 @@ Installation
 ============
 This tool depends on `awscli`.
 
-- `pip3 install awscli`
-- `aws configure`
+- :code:`pip3 install awscli`
+- :code:`aws configure`
 
 Install SegHouse.
 
