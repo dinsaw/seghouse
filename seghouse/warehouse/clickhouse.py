@@ -114,7 +114,6 @@ class ClickHouse(Warehouse):
             (
                 {', '.join(column_type_defs)}
             ) ENGINE = ReplacingMergeTree(ver)
-            PARTITION BY (toDate(timestamp), user_id)
             ORDER BY (user_id)
             """
         logger.debug(f"Running SQL = {sql}")
