@@ -105,31 +105,35 @@ def fix_data_types(df, df_dicts, expected_col_types):
         if column_name not in df_col_types:
             continue
 
-        if df_col_types[column_name] == expected_col_types[column_name]:
+        if df_col_types[column_name] == expected_col_types[column_name] and not (df[column_name].dtype == object):
             continue
         else:
             if expected_col_types[column_name] == data_type.DataType.STRING:
                 cast_to_str(column_name, df_dicts)
             elif expected_col_types[column_name] in data_type.INT_DATATYPES:
-                if df_col_types[column_name] in data_type.INT_DATATYPES:
-                    # Let us hope similar integers will be handled wisely by downstream
-                    continue
+                if df_col_types[column_name] in data_type.INT_DATATYPES and df[column_name].dtype == object:
+                    misfits = misfits + cast_to_int(column_name, df_dicts)
                 elif df_col_types[column_name] in data_type.FLOAT_DATATYPES:
                     misfits = misfits + cast_to_int(column_name, df_dicts)
                 elif df_col_types[column_name] == data_type.DataType.STRING:
                     misfits = misfits + cast_to_int(column_name, df_dicts)
+                elif df_col_types[column_name] in data_type.INT_DATATYPES:
+                    # Let us hope similar integers will be handled wisely by downstream
+                    continue
                 else:
                     raise Exception(
                         f"Dont know how to handle. Column = {column_name}, Expected {expected_col_types[column_name]}, Actual {df_col_types[column_name]}"
                     )
             elif expected_col_types[column_name] in data_type.FLOAT_DATATYPES:
-                if df_col_types[column_name] in data_type.FLOAT_DATATYPES:
-                    # Let us hope similar float variations will be handled wisely by downstream
-                    continue
+                if df_col_types[column_name] in data_type.FLOAT_DATATYPES and df[column_name].dtype == object:
+                    misfits = misfits + cast_to_float(column_name, df_dicts)
                 elif df_col_types[column_name] in data_type.INT_DATATYPES:
                     misfits = misfits + cast_to_float(column_name, df_dicts)
                 elif df_col_types[column_name] == data_type.DataType.STRING:
                     misfits = misfits + cast_to_float(column_name, df_dicts)
+                elif df_col_types[column_name] in data_type.FLOAT_DATATYPES:
+                    # Let us hope similar integers will be handled wisely by downstream
+                    continue
                 else:
                     raise Exception(
                         f"Dont know how to handle. Column = {column_name}, Expected {expected_col_types[column_name]}, Actual {df_col_types[column_name]}"

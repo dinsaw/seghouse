@@ -239,6 +239,9 @@ class ClickHouse(Warehouse):
         self.created_tables.add(f"{schema}.{table}")
 
     def insert_misfits(self, schema: str, misfits: List[dict]):
+        if not misfits:
+            return
+
         self.create_misfits_table(schema)
 
         table = default_table_structure.MISFITS_TABLE
