@@ -5,6 +5,8 @@ from clickhouse_driver import Client
 
 from .warehouse import Warehouse
 from ..config.data_type import DataType
+from ..config import default_table_structure
+
 from ..util import dataframe_util
 
 logger = logging.getLogger(__name__)
@@ -201,11 +203,48 @@ class ClickHouse(Warehouse):
         logger.debug(f"{table} table_column_types = {table_column_types}")
 
         df_dicts = df.to_dict("records")
-        dataframe_util.fix_data_types(df, df_dicts, table_column_types)
+        misfits = dataframe_util.fix_data_types(df, df_dicts, table_column_types)
+        for m in misfits:
+            m['table_name'] = table
+        self.insert_misfits(schema, misfits)
 
         result = self.clickhouse_client.execute(
             f"INSERT INTO {schema}.{table} VALUES",
             df_dicts,
+            types_check=True,
+        )
+        logger.info(f"Inserting DataFrame in {schema}.{table}, result = {result}")
+
+    def create_misfits_table(self, schema: str):
+        table = default_table_structure.MISFITS_TABLE
+        if f"{schema}.{table}" in self.created_tables:
+            return
+
+        sql = f"""
+                            CREATE TABLE IF NOT EXISTS {schema}.{table}
+                            (
+                                message_id String,
+                                table_name String,
+                                column_name String,
+                                column_value String,
+                                expected_data_type String,
+                                actual_data_type String 
+                            ) ENGINE = ReplacingMergeTree()
+                            ORDER BY (message_id, table_name, column_name)
+                            """
+        logger.debug(f"Running SQL = {sql}")
+        result = self.clickhouse_client.execute(sql)
+        logger.debug(f"Creating Table {schema}.{table}, result = {result}")
+
+        self.created_tables.add(f"{schema}.{table}")
+
+    def insert_misfits(self, schema: str, misfits: List[dict]):
+        self.create_misfits_table(schema)
+
+        table = default_table_structure.MISFITS_TABLE
+        result = self.clickhouse_client.execute(
+            f"INSERT INTO {schema}.{table} VALUES",
+            misfits,
             types_check=True,
         )
         logger.info(f"Inserting DataFrame in {schema}.{table}, result = {result}")

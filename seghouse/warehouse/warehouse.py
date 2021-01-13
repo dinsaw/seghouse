@@ -34,6 +34,16 @@ class Warehouse(metaclass=ABCMeta):
         return
 
     @abstractmethod
+    def create_misfits_table(self, schema: str):
+        """ Create misfits table if does not exist"""
+        return
+
+    @abstractmethod
+    def insert_misfits(self, schema: str, misfits: List[dict]):
+        """ Create misfits table if does not exist"""
+        return
+
+    @abstractmethod
     def describe_table(self, chema: str, table: str):
         return
 

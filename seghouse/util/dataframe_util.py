@@ -115,9 +115,9 @@ def fix_data_types(df, df_dicts, expected_col_types):
                     # Let us hope similar integers will be handled wisely by downstream
                     continue
                 elif df_col_types[column_name] in data_type.FLOAT_DATATYPES:
-                    cast_to_int(column_name, df_dicts)
+                    misfits = misfits + cast_to_int(column_name, df_dicts)
                 elif df_col_types[column_name] == data_type.DataType.STRING:
-                    cast_to_int(column_name, df_dicts)
+                    misfits = misfits + cast_to_int(column_name, df_dicts)
                 else:
                     raise Exception(
                         f"Dont know how to handle. Column = {column_name}, Expected {expected_col_types[column_name]}, Actual {df_col_types[column_name]}"
@@ -127,7 +127,9 @@ def fix_data_types(df, df_dicts, expected_col_types):
                     # Let us hope similar float variations will be handled wisely by downstream
                     continue
                 elif df_col_types[column_name] in data_type.INT_DATATYPES:
-                    cast_to_float(column_name, df_dicts)
+                    misfits = misfits + cast_to_float(column_name, df_dicts)
+                elif df_col_types[column_name] == data_type.DataType.STRING:
+                    misfits = misfits + cast_to_float(column_name, df_dicts)
                 else:
                     raise Exception(
                         f"Dont know how to handle. Column = {column_name}, Expected {expected_col_types[column_name]}, Actual {df_col_types[column_name]}"
@@ -136,12 +138,24 @@ def fix_data_types(df, df_dicts, expected_col_types):
                 raise Exception(
                     f"Dont know how to handle. Column = {column_name}, Expected {expected_col_types[column_name]}, Actual {df_col_types[column_name]}"
                 )
+    return misfits
 
 
 def cast_to_float(column_name, df_dicts):
+    misfits = []
     for d in df_dicts:
         if d[column_name] is not None:
-            d[column_name] = float(d[column_name])
+            try:
+                d[column_name] = float(d[column_name])
+            except ValueError:
+                misfits.append({'message_id': d['message_id'],
+                                'column_name': column_name,
+                                'column_value': d[column_name],
+                                'expected_data_type': str(float),
+                                'actual_data_type': str(type(d[column_name]))
+                                })
+                d[column_name] = None
+    return misfits
 
 
 def cast_to_str(column_name, df_dicts):
@@ -151,6 +165,17 @@ def cast_to_str(column_name, df_dicts):
 
 
 def cast_to_int(column_name, df_dicts):
+    misfits = []
     for d in df_dicts:
         if d[column_name] is not None:
-            d[column_name] = int(d[column_name])
+            try:
+                d[column_name] = int(d[column_name])
+            except ValueError:
+                misfits.append({'message_id': d['message_id'],
+                                'column_name': column_name,
+                                'column_value': d[column_name],
+                                'expected_data_type': str(int),
+                                'actual_data_type': str(type(d[column_name]))
+                                })
+                d[column_name] = None
+    return  misfits
