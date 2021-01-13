@@ -147,7 +147,7 @@ class SendToWarehouseJob:
             col_types = dataframe_util.get_datatypes(identities_df)
             logger.debug(f"Col, Types = {col_types}")
 
-            identities_df = dataframe_util.mark_nan_to_none(identities_df, col_types)
+            identities_df = dataframe_util.mark_nan_to_none(identities_df)
 
             self.ensure_table_structure(
                 self.warehouse_schema,
@@ -198,7 +198,7 @@ class SendToWarehouseJob:
             col_types = dataframe_util.get_datatypes(selected_col_df)
             logger.debug(f"Col, Types = {col_types}")
 
-            selected_col_df = dataframe_util.mark_nan_to_none(selected_col_df, col_types)
+            selected_col_df = dataframe_util.mark_nan_to_none(selected_col_df)
 
             self.ensure_table_structure(
                 self.warehouse_schema,
@@ -221,7 +221,7 @@ class SendToWarehouseJob:
             if table in default_table_structure.DEFAULT_TABLES:
                 table = f"esc_{table}"
 
-            event_df = dataframe_util.mark_nan_to_none(event_df, event_col_types)
+            event_df = dataframe_util.mark_nan_to_none(event_df)
             self.ensure_table_structure(
                 self.warehouse_schema,
                 table,
@@ -236,7 +236,7 @@ class SendToWarehouseJob:
             col_types = dataframe_util.get_datatypes(screens_df)
             logger.info(f"Col, Types = {col_types}")
 
-            screens_df = dataframe_util.mark_nan_to_none(screens_df, col_types)
+            screens_df = dataframe_util.mark_nan_to_none(screens_df)
 
             self.ensure_table_structure(
                 self.warehouse_schema,
@@ -252,7 +252,7 @@ class SendToWarehouseJob:
             col_types = dataframe_util.get_datatypes(pages_df)
             logger.info(f"Col, Types = {col_types}")
 
-            pages_df = dataframe_util.mark_nan_to_none(pages_df, col_types)
+            pages_df = dataframe_util.mark_nan_to_none(pages_df)
 
             self.ensure_table_structure(
                 self.warehouse_schema,
@@ -268,7 +268,7 @@ class SendToWarehouseJob:
             col_types = dataframe_util.get_datatypes(groups_df)
             logger.debug(f"Col, Types = {col_types}")
 
-            groups_df = dataframe_util.mark_nan_to_none(groups_df, col_types)
+            groups_df = dataframe_util.mark_nan_to_none(groups_df)
 
             self.ensure_table_structure(
                 self.warehouse_schema,
@@ -284,7 +284,7 @@ class SendToWarehouseJob:
             col_types = dataframe_util.get_datatypes(aliases_df)
             logger.debug(f"Col, Types = {col_types}")
 
-            aliases_df = dataframe_util.mark_nan_to_none(aliases_df, col_types)
+            aliases_df = dataframe_util.mark_nan_to_none(aliases_df)
 
             self.ensure_table_structure(
                 self.warehouse_schema,

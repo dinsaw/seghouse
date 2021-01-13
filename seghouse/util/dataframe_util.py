@@ -60,7 +60,7 @@ def empty(df):
     return row_count(df) == 0
 
 
-def mark_nan_to_none(df, col_types):
+def mark_nan_to_none(df):
     return df.where(pd.notnull(df), None)
 
 
@@ -182,4 +182,4 @@ def cast_to_int(column_name, df_dicts):
                                 'actual_data_type': str(type(d[column_name]))
                                 })
                 d[column_name] = None
-    return  misfits
+    return misfits
