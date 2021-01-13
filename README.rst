@@ -14,8 +14,8 @@ Installation
 ============
 This tool depends on `awscli`.
 
-- `pip3 install awscli`
-- `aws configure`
+- :code:`pip3 install awscli`
+- :code:`aws configure`
 
 Install SegHouse.
 
@@ -23,16 +23,16 @@ Install SegHouse.
 
 Python version >= 3.7 is required. If installed python version is less than 3.7 then first install python3.7.
 
-- `sudo apt install python3.7`
-- `sudo apt-get install build-essential libssl-dev libffi-dev python3.7-dev`
+- :code:`sudo apt install python3.7`
+- :code:`sudo apt-get install build-essential libssl-dev libffi-dev python3.7-dev`
 - Then install seghouse using `python3.7 -m pip install seghouse` command.
 - Remember to run all SegHouse commands using python3.7. Example
-    `python3.7 -m seghouse send ...`
+    :code:`python3.7 -m seghouse send ...`
 
 Commands Overview
 =================
 - Send s3 segment files to warehouse.
-    - Command : `seghouse send --config-file ~/example-seghouse-config.yml --s3-dir "s3://company/clickstream/example_app/android" --namespace example_app_android`
+    - Command : :code:`seghouse send --config-file ~/example-seghouse-config.yml --s3-dir "s3://company/clickstream/example_app/android" --namespace example_app_android`
     - The command expects to find `json.gz` files in the S3 path. All these files will be parsed according to Segment Spec and events will be stored in destination warehouses.
     - The configuration file looks like this.
 
