@@ -1,7 +1,7 @@
 SegHouse
 =========
 
-Send Segment event from S3 files to warehouse.
+Send Segment event from S3 files to Data Warehouses.
 
 Features
 ========
